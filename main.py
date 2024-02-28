@@ -1,21 +1,12 @@
 import re
 import json
-import nltk
 import requests
 import numpy as np
 import pandas as pd
 from io import StringIO 
 from fastapi import FastAPI
 from textblob import TextBlob 
-from fuzzywuzzy import process
 from pydantic import BaseModel
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize 
-from nltk.tokenize import word_tokenize 
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from geopy.geocoders import Nominatim
-import asyncio
 
 import logging
 logging.basicConfig(level=logging.INFO,filename='log.log',filemode='w',format='%(asctime)s %(levelname)s %(message)s')
