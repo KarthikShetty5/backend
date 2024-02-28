@@ -5,6 +5,7 @@ idna
 joblib
 numpy
 pytz
+requests
 regex
 six
 tqdm
