@@ -7,6 +7,10 @@ from io import StringIO
 from fastapi import FastAPI
 from textblob import TextBlob 
 from pydantic import BaseModel
+from nltk.tokenize import sent_tokenize 
+from nltk.tokenize import word_tokenize 
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 import logging
 logging.basicConfig(level=logging.INFO,filename='log.log',filemode='w',format='%(asctime)s %(levelname)s %(message)s')
@@ -26,24 +30,6 @@ app.add_middleware(
 
 
 file_url_storage = None
-
-# @app.post('/')
-# async def root(item:Item):
-#     response = requests.get(item.file, allow_redirects=True)
-#     if response.status_code == 200:
-#         if response.text.strip():
-#             # global df
-#             df = pd.read_csv(StringIO(response.text), encoding='utf-8')
-#             # json_data = peoandmonth(df)
-#             # return JSONResponse(json_data)
-#             global file_url_storage
-#             file_url_storage = item.file
-#             # print(df.head())
-#         else:
-#             print("CSV content is empty.")
-#     else:
-#         logging.error(f"Failed to get file {response.status_code}",exc_info=True)
-#     return item.file
 
 @app.post('/')
 async def root(item:Item):
@@ -128,13 +114,6 @@ def peoandmonth(df):
     return convert_to_json(month_analysis)
 
 
-@app.get('/api/data')
-async def get_data():
-    data = {
-        'key1': 'value1',
-        'key2': 'value2',
-    }
-    return data
 
 @app.get('/data/search')
 async def get_search(item: str):
@@ -144,19 +123,6 @@ async def get_search(item: str):
             df = pd.read_csv(StringIO(response.text), encoding='utf-8')
             search_results = search_data(df, item)
             return search_results
-        else:
-            print("CSV content is empty.")
-    else:
-        logging.error(f"Failed to get file {response.status_code}",exc_info=True)
-
-@app.get('/data/map')
-async def get_map():
-    response = requests.get(file_url_storage, allow_redirects=True)
-    if response.status_code == 200:
-        if response.text.strip():
-            df1 = pd.read_csv(StringIO(response.text), encoding='utf-8')
-            json_data=mapgetter(df1)
-            return json_data
         else:
             print("CSV content is empty.")
     else:
@@ -315,54 +281,3 @@ def search_data(df1, search_keyword):
     search_results = df_search[columns_to_display]
     return search_results
 
-
-async def mapgetter(df1):
-    async def get_coordinates_async(place, geolocator):
-        location = await geolocator.geocode(place)
-        if location:
-            return location.latitude, location.longitude
-        else:
-            return None, None
-
-    async def process_row_async(row, geolocator):
-        place_data = await get_coordinates_async(row["Place"], geolocator)
-        return place_data
-
-    async def main_async(df):
-        async with aiohttp.ClientSession() as session:
-            geolocator = Nominatim(user_agent="geo_visualization", timeout=10, session=session)
-            tasks = [process_row_async(row, geolocator) for index, row in df.iterrows()]
-            places_data = await asyncio.gather(*tasks)
-            df[['Latitude', 'Longitude']] = pd.DataFrame(places_data, columns=['Latitude', 'Longitude'])
-            df.dropna(subset=['Latitude', 'Longitude'], inplace=True)
-            return df
-
-    def convert_df_coordinates(df):
-       place_mapping = {
-        'bangalore': 'Bangalore',
-        'whitefield bengaluru': 'Bangalore',
-        'mangalore bengaluru': 'Bangalore',
-        'bombay': 'Mumbai',
-        'malad mumbai': 'Mumbai',
-        'andheri mumbai': 'Mumbai',
-        'borivali mumbai': 'Mumbai',
-        'govandimumbai': 'Mumbai',
-        'new delhi': 'Delhi',
-        'bengaluru but originally from hyderabad': 'Hyderabad',
-        'hyderabad orissa': 'Hyderabad',
-        'pune mumbai': 'Pune',
-        'vadodara gujarat': 'Gujarat',
-        'ahmedabad': 'Gujarat',
-      }
-
-       df['Place'] = df['Place'].str.lower().map(place_mapping).fillna(df['Place'])
-       return df
-
-    def fetch_coordinates(df):
-        result_df = asyncio.run(main_async(df))
-        return result_df
-
-    df1 = pd.DataFrame({'Place': ['Bangalore', 'Mumbai', 'New Delhi', 'Hyderabad']})
-    df1 = convert_df_coordinates(df1)
-    result_df = fetch_coordinates(df1)
-    return result_df
