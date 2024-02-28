@@ -1,0 +1,11 @@
+charset-normalizer
+colorama
+idna
+joblib
+numpy
+pytz
+regex
+six
+tqdm
+tzdata
+urllib3
