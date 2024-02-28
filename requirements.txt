@@ -1,3 +1,4 @@
+uvicorn
 charset-normalizer
 colorama
 idna
