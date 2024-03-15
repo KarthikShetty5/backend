@@ -22,7 +22,7 @@ class Item(BaseModel):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Specify the origin of your Next.js app
+    allow_origins=["https://karthikdb.vercel.app"],  # Specify the origin of your Next.js app
     allow_credentials=True,
     allow_methods=["POST"],
     allow_headers=["*"],
@@ -96,7 +96,7 @@ def peoandmonth(df):
     df1=df1.fillna('-')
     df1['Date'].replace('07.04,22','07.04.22',inplace=True)
     df1=df1[df1[ 'Date']!='-']
-    df1[ 'Date']= pd.to_datetime(df1[ 'Date'] , format='%d.%m.%y')
+    df1[ 'Date']= pd.to_datetime(df1[ 'Date'], format='%d.%m.%y')
     df1[ 'Designation'] = df1[ 'Designation'].str.strip().replace('Co-founder', 'Co-Founder')
     df1[ 'Designation'].value_counts().head(50)
     df1[ 'Designation']=df1[ 'Designation'].apply(clean_text)
@@ -124,7 +124,10 @@ async def get_search(item: str):
             search_results = search_data(df, item)
             return search_results
         else:
-            print("CSV content is empty.")
+            return {
+                    'status_code': 204,
+                    'error': 'CSV content is empty.'
+                }
     else:
         logging.error(f"Failed to get file {response.status_code}",exc_info=True)
     
@@ -265,19 +268,40 @@ async def get_recent():
     else:
         logging.error(f"Failed to get file {response.status_code}",exc_info=True)
 
-def search_data(df1, search_keyword):
-    def search_data1(search_keyword):
-        df1['Areas of interest'] = df1['Areas of interest'].fillna('')
-        filtered_data = df1[df1['Areas of interest'].str.contains(search_keyword, case=False)]
-        return filtered_data
-    df1=search_data1(search_keyword)
-    df_search = df1[
-    (df1['Name'].str.contains(search_keyword, case=False)) |
-    (df1['Company'].str.contains(search_keyword, case=False)) |
-    (df1['Designation'].str.contains(search_keyword, case=False)) |
-    (df1['Areas of interest'].str.contains(search_keyword, case=False))
-]
-    columns_to_display = ['Name', 'Date', 'Designation', 'Company', 'Areas of interest','Linkedin']
-    search_results = df_search[columns_to_display]
-    return search_results
 
+
+def search_data(df1, search_keyword):
+    try:
+        if not search_keyword or len(search_keyword) < 2:
+            raise ValueError("Please enter a valid keyword with at least two characters")
+
+        df1['Areas of interest'] = df1['Areas of interest'].fillna('')
+        filtered_data = df1[
+            (df1['Name'].str.contains(search_keyword, case=False)) |
+            (df1['Company'].str.contains(search_keyword, case=False)) |
+            (df1['Designation'].str.contains(search_keyword, case=False)) |
+            (df1['Areas of interest'].str.contains(search_keyword, case=False))
+        ]
+
+        if filtered_data.empty:
+            return {
+                'status_code': 404,
+                'data': 'No matching data found'
+            }
+        columns_to_display = ['Name', 'Date', 'Designation', 'Company', 'Areas of interest', 'Linkedin']
+        search_results = filtered_data[columns_to_display]
+        search_results = search_results.where(pd.notna(search_results), None)
+        return {
+            'status_code': 200,
+            'data': search_results.to_dict(orient='records')
+        }
+    except ValueError as ve:
+        return {
+            'status_code': 400,
+            'error': str(ve)
+        }
+    except Exception as e:
+        return {
+            'status_code': 500,
+            'error': f"An error occurred: {str(e)}"
+        }
