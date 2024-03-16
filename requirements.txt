@@ -4,7 +4,6 @@ pandas
 charset-normalizer
 colorama
 fastapi
-collections
 os
 requests==2.26.0
 idna
