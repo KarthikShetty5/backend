@@ -1,5 +1,5 @@
 uvicorn
-python==3.7
+python
 numpy
 pandas
 charset-normalizer
