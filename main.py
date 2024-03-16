@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import os
 from io import StringIO 
-from openai import OpenAI
+# from openai import OpenAI
 from datetime import datetime
 from fastapi import FastAPI
 from textblob import TextBlob 
