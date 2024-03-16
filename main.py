@@ -15,10 +15,8 @@ from nltk.tokenize import sent_tokenize
 from nltk.tokenize import word_tokenize 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-OPENAI_API_KEY = "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"
-client = OpenAI(
-    api_key=OPENAI_API_KEY,
-)
+
+
 import logging
 logging.basicConfig(level=logging.INFO,filename='log.log',filemode='w',format='%(asctime)s %(levelname)s %(message)s')
 
@@ -166,106 +164,106 @@ def displayer(df1):
 
 
 
-def productivity(df1):
-    df1.columns = df1.columns.str.lower().str.replace(' ', '_').str.strip()    
+# def productivity(df1):
+#     df1.columns = df1.columns.str.lower().str.replace(' ', '_').str.strip()    
     
-    serial_number_lst = df1["serial_no"].tolist()
-    template_list_dict = {
-        "network": {
-            "Name": dict(zip(serial_number_lst, df1["name"].tolist())),
-            "Date": dict(zip(serial_number_lst, df1["date"].tolist())),
-            "Company": dict(zip(serial_number_lst, df1["company"].tolist())),
-        }
-    }
-    # Overall data with all the parameters
-    overall_list_dict_template = {
-        "network": {
-            "Designation": dict(zip(serial_number_lst, df1["designation"].tolist())),
-            "Areas of Interest": dict(zip(serial_number_lst, df1["areas_of_interest"].tolist())),
-            "Insights": dict(zip(serial_number_lst, df1["insights"].tolist())),
-            "Place": dict(zip(serial_number_lst, df1["place"].tolist()))
-        }
-    }
-    overall_list_dict = {**overall_list_dict_template, **template_list_dict}
-    feature1_template_dict = {
-        "network": {
-            "Insights": dict(zip(serial_number_lst, df1["insights"].tolist())),
-        }
-    }
-    if "network" in template_list_dict and "network" in feature1_template_dict:
-        feature1_template = template_list_dict.copy()
-        feature1_template["network"].update(feature1_template_dict["network"])
-    else:
-        result = {"status":"fail",
-                "reason":"both dictionaries must have the 'network' key."}
+#     serial_number_lst = df1["serial_no"].tolist()
+#     template_list_dict = {
+#         "network": {
+#             "Name": dict(zip(serial_number_lst, df1["name"].tolist())),
+#             "Date": dict(zip(serial_number_lst, df1["date"].tolist())),
+#             "Company": dict(zip(serial_number_lst, df1["company"].tolist())),
+#         }
+#     }
+#     # Overall data with all the parameters
+#     overall_list_dict_template = {
+#         "network": {
+#             "Designation": dict(zip(serial_number_lst, df1["designation"].tolist())),
+#             "Areas of Interest": dict(zip(serial_number_lst, df1["areas_of_interest"].tolist())),
+#             "Insights": dict(zip(serial_number_lst, df1["insights"].tolist())),
+#             "Place": dict(zip(serial_number_lst, df1["place"].tolist()))
+#         }
+#     }
+#     overall_list_dict = {**overall_list_dict_template, **template_list_dict}
+#     feature1_template_dict = {
+#         "network": {
+#             "Insights": dict(zip(serial_number_lst, df1["insights"].tolist())),
+#         }
+#     }
+#     if "network" in template_list_dict and "network" in feature1_template_dict:
+#         feature1_template = template_list_dict.copy()
+#         feature1_template["network"].update(feature1_template_dict["network"])
+#     else:
+#         result = {"status":"fail",
+#                 "reason":"both dictionaries must have the 'network' key."}
 
-    insight_lst_test = df1["insights"].to_list()
-    insight_lst = insight_lst_test[0:5]
-    f1_Prompt_str = '''
-    Here are my learnings after a networking call, I want to improve my communication skills from on my learnings. 
-    Don't give generic advice. Give questions I should have asked. 
-    Please keep the top 3 (not a strict number) important questions if you have sufficient learning data based on the level of high impact on my communication. Keep it short and crisp.
-    If the learning has No data or enough data, Give "Not enough data" as output. But never make Not enough data as a separate point.
-    '''
+#     insight_lst_test = df1["insights"].to_list()
+#     insight_lst = insight_lst_test[0:5]
+#     f1_Prompt_str = '''
+#     Here are my learnings after a networking call, I want to improve my communication skills from on my learnings. 
+#     Don't give generic advice. Give questions I should have asked. 
+#     Please keep the top 3 (not a strict number) important questions if you have sufficient learning data based on the level of high impact on my communication. Keep it short and crisp.
+#     If the learning has No data or enough data, Give "Not enough data" as output. But never make Not enough data as a separate point.
+#     '''
 
-    f2_Prompt_str = "Please write a 150 character followup message for text message without hashtags based on the data"
+#     f2_Prompt_str = "Please write a 150 character followup message for text message without hashtags based on the data"
 
-    counter = 0
-    new_insight_lst = []
-    for i in range(0,len(insight_lst)):
-        if insight_lst[i] == "-" or insight_lst[i].isdigit():
-            no_data = "No data"
-            counter += 1
-            new_insight_lst.append(no_data)
-        else:
-            new_insight_lst.append(insight_lst[i])
-    f1_lst = []
-    f2_lst = []
+#     counter = 0
+#     new_insight_lst = []
+#     for i in range(0,len(insight_lst)):
+#         if insight_lst[i] == "-" or insight_lst[i].isdigit():
+#             no_data = "No data"
+#             counter += 1
+#             new_insight_lst.append(no_data)
+#         else:
+#             new_insight_lst.append(insight_lst[i])
+#     f1_lst = []
+#     f2_lst = []
 
-    for c in new_insight_lst:
-        session = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{
-                        "role": "user",
-                        "content": f1_Prompt_str + c
-                    }],
-                    temperature=0.0
-        )
-        response = session.choices[0].message.content
-        f1_lst.append(response)
+#     for c in new_insight_lst:
+#         session = client.chat.completions.create(
+#             model="gpt-3.5-turbo",
+#             messages=[{
+#                         "role": "user",
+#                         "content": f1_Prompt_str + c
+#                     }],
+#                     temperature=0.0
+#         )
+#         response = session.choices[0].message.content
+#         f1_lst.append(response)
 
-        session = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{
-                        "role": "user",
-                        "content": f2_Prompt_str + response
-                    }],
-            temperature=0.0
-        )
-        response = session.choices[0].message.content
-        f2_lst.append(response)
+#         session = client.chat.completions.create(
+#             model="gpt-3.5-turbo",
+#             messages=[{
+#                         "role": "user",
+#                         "content": f2_Prompt_str + response
+#                     }],
+#             temperature=0.0
+#         )
+#         response = session.choices[0].message.content
+#         f2_lst.append(response)
 
-    f1_dict = {
-        "network": {
-            "Improve_communication": dict(zip(serial_number_lst, f1_lst)),
-            "Follow_up": dict(zip(serial_number_lst, f2_lst))
-        }
-    }
+#     f1_dict = {
+#         "network": {
+#             "Improve_communication": dict(zip(serial_number_lst, f1_lst)),
+#             "Follow_up": dict(zip(serial_number_lst, f2_lst))
+#         }
+#     }
 
-    if "network" in feature1_template and "network" in f1_dict:
-        improve_communication = feature1_template.copy()
-        improve_communication["network"].update(f1_dict["network"])
-        follow_up = feature1_template.copy()
-        follow_up["network"].update(f1_dict["network"])
+#     if "network" in feature1_template and "network" in f1_dict:
+#         improve_communication = feature1_template.copy()
+#         improve_communication["network"].update(f1_dict["network"])
+#         follow_up = feature1_template.copy()
+#         follow_up["network"].update(f1_dict["network"])
         
-    else:
-        result = {"status":"fail",
-                "reason":"both dictionaries must have the 'network' key."}
+#     else:
+#         result = {"status":"fail",
+#                 "reason":"both dictionaries must have the 'network' key."}
     
-    result = {"status":"pass",
-                "response":improve_communication}
+#     result = {"status":"pass",
+#                 "response":improve_communication}
     
-    return (result)
+#     return (result)
 
 
 
@@ -360,8 +358,8 @@ async def get_year():
     if response.status_code == 200:
         if response.text.strip():
             df1 = pd.read_csv(StringIO(response.text), encoding='utf-8')
-            data = productivity(df1)
-            return data
+            # data = productivity(df1)
+            # return data
         else:
             print("CSV content is empty.")
     else:
