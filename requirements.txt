@@ -6,6 +6,7 @@ colorama
 fastapi
 requests==2.26.0
 idna
+openai
 joblib
 pytz
 textblob
