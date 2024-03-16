@@ -3,8 +3,7 @@ numpy
 pandas
 charset-normalizer
 colorama
-fastapi==0.110.0
-os
+fastapi
 requests==2.26.0
 idna
 joblib
