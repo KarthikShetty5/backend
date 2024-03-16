@@ -4,6 +4,9 @@ pandas
 charset-normalizer
 colorama
 fastapi
+openai
+collections
+os
 requests==2.26.0
 idna
 joblib
